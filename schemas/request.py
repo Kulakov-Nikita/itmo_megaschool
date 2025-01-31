@@ -1,6 +1,7 @@
 from typing import List
 
 from pydantic import BaseModel, HttpUrl
+from typing import Optional
 
 
 class PredictionRequest(BaseModel):
@@ -10,6 +11,6 @@ class PredictionRequest(BaseModel):
 
 class PredictionResponse(BaseModel):
     id: int
-    answer: int
+    answer: Optional[int]
     reasoning: str
     sources: List[HttpUrl]

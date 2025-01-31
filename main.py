@@ -58,23 +58,32 @@ async def predict(body: PredictionRequest):
 
         rag = RAG(seacher_folder_id, seacher_api_token, sammarizer_api_token)
 
-        # Здесь будет вызов вашей модели
+        
         answer_text, answer_num, links = rag.process(body.query)
 
         sources: List[HttpUrl] = [HttpUrl(link) for link in links]
 
-        response = PredictionResponse(
+        if answer_num == -1:
+            response = PredictionResponse(
             id=body.id,
-            answer=answer_num,
+            answer=None,
             reasoning=answer_text,
             sources=sources,
         )
+        else:    
+            response = PredictionResponse(
+                id=body.id,
+                answer=answer_num,
+                reasoning=answer_text,
+                sources=sources,
+            )
+
         await logger.info(f"Successfully processed request {body.id}")
         return response
     except ValueError as e:
         error_msg = str(e)
-        await logger.error(f"Validation error for request {body.id}: {error_msg}")
+        await logger.error(f"Validation error for request {body.id}: {error_msg}, {body.query}")
         raise HTTPException(status_code=400, detail=error_msg)
     except Exception as e:
-        await logger.error(f"Internal error processing request {body.id}: {str(e)}")
+        await logger.error(f"Internal error processing request {body.id}: {str(e)}, {body.query}")
         raise HTTPException(status_code=500, detail="Internal server error")
