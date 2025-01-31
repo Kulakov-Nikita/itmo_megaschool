@@ -5,6 +5,8 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from pydantic import HttpUrl
 from schemas.request import PredictionRequest, PredictionResponse
 from utils.logger import setup_logger
+from rag.rag import RAG
+from config import seacher_folder_id, seacher_api_token, sammarizer_api_token
 
 # Initialize
 app = FastAPI()
@@ -53,17 +55,18 @@ async def log_requests(request: Request, call_next):
 async def predict(body: PredictionRequest):
     try:
         await logger.info(f"Processing prediction request with id: {body.id}")
+
+        rag = RAG(seacher_folder_id, seacher_api_token, sammarizer_api_token)
+
         # Здесь будет вызов вашей модели
-        answer = 1  # Замените на реальный вызов модели
-        sources: List[HttpUrl] = [
-            HttpUrl("https://itmo.ru/ru/"),
-            HttpUrl("https://abit.itmo.ru/"),
-        ]
+        answer_text, answer_num, links = rag.process(body.query)
+
+        sources: List[HttpUrl] = [HttpUrl(link) for link in links]
 
         response = PredictionResponse(
             id=body.id,
-            answer=answer,
-            reasoning="Из информации на сайте",
+            answer=answer_num,
+            reasoning=answer_text,
             sources=sources,
         )
         await logger.info(f"Successfully processed request {body.id}")

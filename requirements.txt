@@ -1,4 +1,5 @@
 fastapi
+requests
 aiologger[aiofiles]
 pip-chill
 uvicorn
